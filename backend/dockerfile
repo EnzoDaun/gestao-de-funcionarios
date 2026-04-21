@@ -1,0 +1,14 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Copiamos o package.json antes do código — se apenas o código mudar,
+# o Docker reutiliza a camada do npm install do cache.
+COPY package*.json ./
+RUN npm install
+
+COPY . .
+RUN npm run build
+
+EXPOSE 3000
+CMD ["node", "dist/server.js"]
