@@ -24,6 +24,7 @@
                   class="form-control"
                   :class="{ 'is-invalid': submitted && !form.name }"
                   placeholder="Nome completo"
+                  maxlength="255"
                 />
                 <div class="invalid-feedback">Campo obrigatório</div>
               </div>
@@ -35,6 +36,7 @@
                   class="form-control"
                   :class="{ 'is-invalid': submitted && !form.role }"
                   placeholder="Ex: Desenvolvedor, Analista..."
+                  maxlength="255"
                 />
                 <div class="invalid-feedback">Campo obrigatório</div>
               </div>
@@ -46,37 +48,57 @@
                   class="form-control"
                   :class="{ 'is-invalid': submitted && !form.address }"
                   placeholder="Rua, número, complemento"
+                  maxlength="255"
                 />
                 <div class="invalid-feedback">Campo obrigatório</div>
               </div>
 
               <div class="col-md-6">
                 <label class="form-label">Bairro</label>
-                <input v-model="form.neighborhood" class="form-control" placeholder="Bairro" />
+                  <input v-model="form.neighborhood" class="form-control" placeholder="Bairro" maxlength="255" />
               </div>
 
               <div class="col-md-3">
                 <label class="form-label">CEP</label>
-                <input v-model="form.zipcode" class="form-control" placeholder="00000-000" maxlength="9" />
+                <input
+                  :value="form.zipcode"
+                  @input="onCepInput"
+                  class="form-control"
+                  :class="{ 'is-invalid': submitted && form.zipcode && !isCepValid }"
+                  placeholder="00000-000"
+                  inputmode="numeric"
+                />
+                <div class="invalid-feedback">CEP inválido — use o formato 00000-000</div>
               </div>
 
               <div class="col-md-3">
                 <label class="form-label">Telefone</label>
-                <input v-model="form.phone" class="form-control" placeholder="(00) 00000-0000" maxlength="20" />
+                <input
+                  :value="form.phone"
+                  @input="onPhoneInput"
+                  class="form-control"
+                  :class="{ 'is-invalid': submitted && form.phone && !isPhoneValid }"
+                  placeholder="(00) 00000-0000"
+                  inputmode="numeric"
+                />
+                <div class="invalid-feedback">Telefone inválido — use (XX) XXXX-XXXX ou (XX) XXXXX-XXXX</div>
               </div>
 
               <div class="col-md-4">
                 <label class="form-label">Salário (R$) <span class="text-danger">*</span></label>
                 <input
                   v-model="form.salary"
+                  @input="onSalaryInput"
                   type="number"
                   step="0.01"
                   min="0"
                   class="form-control"
-                  :class="{ 'is-invalid': submitted && !form.salary }"
+                  :class="{ 'is-invalid': submitted && isSalaryInvalid }"
                   placeholder="0,00"
                 />
-                <div class="invalid-feedback">Campo obrigatório</div>
+                <div class="invalid-feedback">
+                  {{ Number(form.salary) < 0 ? 'Salário não pode ser negativo' : 'Campo obrigatório' }}
+                </div>
               </div>
 
               <div class="col-md-4">
@@ -161,8 +183,14 @@ onMounted(() => {
 
 async function handleSubmit() {
   submitted.value = true;
-  saving.value    = true;
-  apiError.value  = '';
+
+  if (!isCepValid.value || !isPhoneValid.value || isSalaryInvalid.value) {
+    apiError.value = 'Corrija os campos destacados antes de salvar.';
+    return;
+  }
+
+  saving.value   = true;
+  apiError.value = '';
   try {
     const payload = { ...form.value, salary: Number(form.value.salary) };
     if (isEditing.value && props.employee?.uuid) {
@@ -177,5 +205,51 @@ async function handleSubmit() {
   } finally {
     saving.value = false;
   }
+}
+
+const isCepValid = computed(() =>
+  form.value.zipcode === '' || /^\d{5}-\d{3}$/.test(form.value.zipcode)
+);
+
+const isPhoneValid = computed(() =>
+  form.value.phone === '' ||
+  /^\(\d{2}\) \d{4}-\d{4}$/.test(form.value.phone) ||
+  /^\(\d{2}\) \d{5}-\d{4}$/.test(form.value.phone)
+);
+
+const isSalaryInvalid = computed(() => {
+  const val = Number(form.value.salary);
+  return form.value.salary === null || isNaN(val) || val < 0;
+});
+
+function onCepInput(e: Event) {
+  const input = e.target as HTMLInputElement;
+  const digits = input.value.replace(/\D/g, '').slice(0, 8);
+  const formatted = digits.length > 5
+    ? `${digits.slice(0, 5)}-${digits.slice(5)}`
+    : digits;
+    
+  input.value = formatted;
+  form.value.zipcode = formatted;
+}
+
+function onPhoneInput(e: Event) {
+  const input = e.target as HTMLInputElement;
+  const digits = input.value.replace(/\D/g, '').slice(0, 11);
+
+  let formatted = '';
+  if (digits.length === 0)        formatted = '';
+  else if (digits.length <= 2)    formatted = `(${digits}`;
+  else if (digits.length <= 6)    formatted = `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+  else if (digits.length <= 10)   formatted = `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
+  else                            formatted = `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+
+  input.value = formatted;
+  form.value.phone = formatted;
+}
+
+function onSalaryInput(e: Event) {
+  const val = parseFloat((e.target as HTMLInputElement).value);
+  if (!isNaN(val) && val < 0) form.value.salary = 0;
 }
 </script>

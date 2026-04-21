@@ -29,12 +29,12 @@ describe('validateEmployee', () => {
   it('deve retornar erros quando todos os campos obrigatórios estão ausentes', () => {
     const errors = validateEmployee({});
 
-    expect(errors).toContain('name é obrigatório');
-    expect(errors).toContain('address é obrigatório');
-    expect(errors).toContain('salary é obrigatório e deve ser um número');
-    expect(errors).toContain('contract_date é obrigatório');
-    expect(errors).toContain('role é obrigatório');
-    expect(errors).toContain('status é obrigatório');
+    expect(errors).toContain('Nome é obrigatório');
+    expect(errors).toContain('Endereço é obrigatório');
+    expect(errors).toContain('Salário é obrigatório e deve ser um número');
+    expect(errors).toContain('Data de Contrato é obrigatório');
+    expect(errors).toContain('Cargo é obrigatório');
+    expect(errors).toContain('Status é obrigatório');
     expect(errors.length).toBe(6);
   });
 

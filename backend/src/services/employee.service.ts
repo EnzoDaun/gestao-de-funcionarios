@@ -12,22 +12,32 @@ export function validateEmployee(data: Partial<CreateEmployeeDTO>): string[] {
   const errors: string[] = [];
 
   if (!data.name || String(data.name).trim() === '') {
-    errors.push('name é obrigatório');
+    errors.push('Nome é obrigatório');
+  } else if (String(data.name).length > 255) {
+    errors.push('Nome não pode ter mais de 255 caracteres');
   }
+
   if (!data.address || String(data.address).trim() === '') {
-    errors.push('address é obrigatório');
+    errors.push('Endereço é obrigatório');
+  } else if (String(data.address).length > 255) {
+    errors.push('Endereço não pode ter mais de 255 caracteres');
   }
+
   if (data.salary === undefined || data.salary === null || isNaN(Number(data.salary))) {
-    errors.push('salary é obrigatório e deve ser um número');
+    errors.push('Salário é obrigatório e deve ser um número');
+  } else if (Number(data.salary) < 0) {
+    errors.push('Salário não pode ser negativo');
   }
   if (!data.contract_date) {
-    errors.push('contract_date é obrigatório');
+    errors.push('Data de Contrato é obrigatório');
   }
-  if (!data.role || String(data.role).trim() === '') {
-    errors.push('role é obrigatório');
+    if (!data.role || String(data.role).trim() === '') {
+    errors.push('Cargo é obrigatório');
+  } else if (String(data.role).length > 255) {
+    errors.push('Cargo não pode ter mais de 255 caracteres');
   }
   if (!data.status || String(data.status).trim() === '') {
-    errors.push('status é obrigatório');
+    errors.push('Status é obrigatório');
   }
 
   return errors;
